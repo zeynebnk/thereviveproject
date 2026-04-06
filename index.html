@@ -771,16 +771,17 @@ function renderHome(container) {
 
 function renderWriting(container) {
   const listWrap = document.createElement('div');
-  listWrap.style.opacity = '0';
-  listWrap.style.transition = 'opacity 0.8s ease';
   listWrap.style.marginTop = '6rem';
 
-  pages.writing.posts.forEach(post => {
+  let endTime = 0;
+  pages.writing.posts.forEach((post, i) => {
     const item = document.createElement('div');
     item.className = 'post-item';
-    item.innerHTML = `
-      <div class="post-title">${post.title}</div>
-    `;
+    item.style.cursor = 'pointer';
+    const flippable = buildDecodePara(post.title, item);
+    const delay = 300 + i * 400;
+    const t = decodeSpans(flippable, delay);
+    endTime = Math.max(endTime, t);
     item.addEventListener('click', () => {
       if (transitioning) return;
       navigateToPost(post.id);
@@ -789,13 +790,12 @@ function renderWriting(container) {
   });
 
   container.appendChild(listWrap);
-  setTimeout(() => { listWrap.style.opacity = '1'; }, 400);
 
   const tail = buildTail(container, 'writing');
   setTimeout(() => {
     tail.classList.add('show');
     transitioning = false;
-  }, 800);
+  }, endTime + 200);
 
   resetPageLayout();
 }
@@ -937,28 +937,38 @@ function navigateToPost(postId) {
 
 function renderResearch(container) {
   const listWrap = document.createElement('div');
-  listWrap.style.opacity = '0';
-  listWrap.style.transition = 'opacity 0.8s ease';
   listWrap.style.marginTop = '6rem';
 
-  const caption = document.createElement('div');
-  caption.className = 'research-caption';
-  caption.textContent = pages.research.caption;
-  listWrap.appendChild(caption);
+  const captionWrap = document.createElement('div');
+  captionWrap.className = 'research-caption';
+  const captionFlip = buildDecodePara(pages.research.caption, captionWrap);
+  decodeSpans(captionFlip, 200);
+  listWrap.appendChild(captionWrap);
 
-  pages.research.papers.forEach(paper => {
+  let endTime = 0;
+  pages.research.papers.forEach((paper, i) => {
     const item = document.createElement('div');
     item.className = 'research-item';
-    item.innerHTML = paper.title
-      + '<div class="research-item-meta">' + paper.authors + ' \u00b7 ' + paper.venue + '</div>';
+    const flippable = buildDecodePara(paper.title, item);
+    const delay = 400 + i * 500;
+    const t = decodeSpans(flippable, delay);
+    endTime = Math.max(endTime, t);
+
+    const meta = document.createElement('div');
+    meta.className = 'research-item-meta';
+    meta.textContent = paper.authors + ' \u00b7 ' + paper.venue;
+    meta.style.opacity = '0';
+    meta.style.transition = 'opacity 0.5s ease';
+    item.appendChild(meta);
+    setTimeout(() => { meta.style.opacity = '1'; }, delay + 600);
+
     listWrap.appendChild(item);
   });
 
   container.appendChild(listWrap);
-  requestAnimationFrame(() => { listWrap.style.opacity = '1'; });
 
   const tail = buildTail(container, 'research');
-  setTimeout(() => { tail.classList.add('show'); transitioning = false; }, 1000);
+  setTimeout(() => { tail.classList.add('show'); transitioning = false; }, endTime + 200);
 }
 
 function renderRomeyka(container) {
